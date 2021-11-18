@@ -1,7 +1,9 @@
 {
     "root": true,
     "parser": "@typescript-eslint/parser",
-    "plugins": ["@typescript-eslint"],
+    "plugins": [
+        "@typescript-eslint"
+    ],
     "extends": [
         "airbnb",
         "airbnb-typescript",
@@ -11,11 +13,40 @@
         "prettier"
     ],
     "parserOptions": {
-        "project": "./tsconfig.json"
+      "ecmaVersion": 11,
+      "sourceType": "module",
+      "project": "./tsconfig.eslint.json"
     },
     "rules": {
-        "multiline-comment-style": ["error", "starred-block"],
+        "multiline-comment-style": [
+            "error",
+            "starred-block"
+        ],
         "no-trailing-spaces": "error",
-        "no-console": "off"
+        "no-console": "off",
+        "@typescript-eslint/lines-between-class-members": [
+            "error",
+            "always",
+            {
+                "exceptAfterSingleLine": true
+            }
+        ],
+        "import/prefer-default-export": "off",
+        "no-restricted-syntax": [
+            "error",
+            {
+                "selector": "ExportDefaultDeclaration",
+                "message": "Do not use default exports. Importing modules must give a name to these values, which can lead to inconsistencies in naming across modules."
+            }
+        ],
+        "class-methods-use-this": "off",
+        "no-unreachable": "warn",
+        "no-unreachable-loop": "warn",
+        "@typescript-eslint/no-empty-interface": [
+            "error",
+            {
+                "allowSingleExtends": true
+            }
+        ]
     }
 }
