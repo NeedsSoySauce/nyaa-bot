@@ -45,7 +45,7 @@ export interface NyaaRssChannel {
     description: string;
     link: string;
     "atom:link": string;
-    item: NyaaRssItem[];
+    item?: NyaaRssItem[];
 }
 
 export interface NyaaRssItem {
@@ -111,7 +111,7 @@ export class NyaaClient {
     }
 
     public mapRssResponse(response: NyaaRssResponse): NyaaSearchResult[] {
-        return response.rss.channel.item.map(item => ({
+        return response.rss.channel.item?.map(item => ({
             title: item.title,
             link: item.link,
             guid: item.guid,
@@ -127,7 +127,7 @@ export class NyaaClient {
             "nyaaTrusted": item['nyaa:trusted'] === 'Yes',
             "nyaaRemake": item['nyaa:remake'] === 'Yes',
             description: "string"
-        }))
+        })) ?? []
     }
 
     public async search(params: NyaaSearchParameters): Promise<NyaaSearchResult[]> {
@@ -140,6 +140,8 @@ export class NyaaClient {
 
         const url = new URL(this.baseUrl.href);
         url.search = qs.toString();
+
+        console.log(`${url}`)
 
         const response = await this.rssClient.get<NyaaRssResponse>(`${url}`);
         const results = this.mapRssResponse(response)

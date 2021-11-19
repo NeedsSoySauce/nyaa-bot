@@ -24,14 +24,14 @@ client.on('messageCreate', (message) => {
 
     const query = message.content.substring(prefix.length);
 
-    console.log(message);
+    console.log(`${message.author.username}#${message.author.discriminator}: ${message.content}`)
 
     nyaa.search({
         query,
-        category: NyaaCategory.AnimeEnglishTranslated,
+        category: NyaaCategory.AllCategories,
     }).then((res) => {
         message.channel.send(
-            `@${message.author.username}#${message.author.discriminator}, your search for '${query}' returned ${res.length} result(s).`,
+            `${message.author}, your search for '${query}' returned ${res.length} result(s).`,
         );
     });
 });
