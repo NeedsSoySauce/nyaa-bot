@@ -1,3 +1,6 @@
+# Sqlite
+**/*.db
+
 # Build
 build
 

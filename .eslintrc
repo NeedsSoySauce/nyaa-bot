@@ -19,7 +19,7 @@
     },
     "rules": {
         "multiline-comment-style": [
-            "error",
+            "off",
             "starred-block"
         ],
         "no-trailing-spaces": "error",
@@ -47,6 +47,7 @@
             {
                 "allowSingleExtends": true
             }
-        ]
+        ],
+        "@typescript-eslint/ban-ts-comment": "warn"
     }
 }

@@ -1,16 +1,24 @@
+import Collection from '@discordjs/collection';
 import { Client, Intents } from 'discord.js';
-import { NyaaClient, NyaaCategory } from './nyaa.js';
+import { Sequelize } from 'sequelize';
+import { Command, debug, search } from './commands/index.js';
+import { NyaaCategory, NyaaClient } from './nyaa.js';
+
+class CommandClient extends Client {
+    public commands: Collection<string, Command> = new Collection()
+}
 
 const nyaa = new NyaaClient();
 
-const client = new Client({
+const client = new CommandClient({
     intents: [
         Intents.FLAGS.GUILDS,
         Intents.FLAGS.DIRECT_MESSAGES,
         Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
         Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+        Intents.FLAGS.GUILD_MESSAGE_REACTIONS
     ],
+    partials: ["CHANNEL"]
 });
 
 client.on('ready', () => {
@@ -39,9 +47,31 @@ client.on('messageCreate', (message) => {
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isCommand()) return;
 
-    if (interaction.commandName === 'ping') {
-        await interaction.reply('Pong!');
-    }
+    const command = client.commands.get(interaction.commandName)
+
+    if (!command) return;
+
+	try {
+		await command.execute(interaction);
+	} catch (error) {
+		console.error(error);
+		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+	}
 });
 
+const commands = [search, debug]
+
+commands.forEach(command => {
+    client.commands.set(command.builder.name, command)
+})
+
 client.login(process.env.DISCORD_TOKEN);
+
+const sequelize = new Sequelize('sqlite:./test.db')
+
+try {
+    await sequelize.authenticate();
+    console.log('Connection has been established successfully.');
+} catch (error) {
+    console.error('Unable to connect to the database:', error);
+}
