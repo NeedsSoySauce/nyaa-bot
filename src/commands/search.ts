@@ -10,18 +10,18 @@ const categoryChoices: CommandOptionChoice<string>[] = Array.from(NyaaCategoryDi
 export const search: Command = {
     builder: new SlashCommandBuilder()
         .setName("search")
-        .setDescription("Nyaa")
+        .setDescription("Search Nyaa's RSS feed")
         .addStringOption(option =>
             option.setName('query')
-                .setDescription("Search query")
+                .setDescription("Search query, e.g. 'one punch man'")
                 .setRequired(true))
         .addIntegerOption(option =>
             option.setName('filter')
-                .setDescription('Filter option')
+                .setDescription("Filter option, e.g. 'No Remakes'")
                 .addChoices(filterChoices))
         .addStringOption(option =>
             option.setName('category')
-                .setDescription('Category option')
+                .setDescription("Category filter, e.g. 'Anime - English Translated'")
                 .addChoices(categoryChoices)),
     execute: async (interaction) => {
         const query = interaction.options.getString('query', true)
