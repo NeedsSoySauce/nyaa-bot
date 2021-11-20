@@ -13,9 +13,13 @@
         "prettier"
     ],
     "parserOptions": {
-      "ecmaVersion": 11,
-      "sourceType": "module",
-      "project": "./tsconfig.eslint.json"
+        "ecmaVersion": 11,
+        "sourceType": "module",
+        "project": [
+            "./tsconfig.json",
+            "./tsconfig.scripts.json",
+            "./tsconfig.eslint.json"
+        ]
     },
     "rules": {
         "multiline-comment-style": [

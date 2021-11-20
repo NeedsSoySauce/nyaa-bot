@@ -1,11 +1,18 @@
 import { URL, URLSearchParams } from 'url';
-import { RssClient, BasicRssClient } from './rss.js';
+import { BasicRssClient, RssClient } from './rss.js';
+import { NullableUndefined } from './types';
 
 export enum NyaaFilter {
     NoFilter,
     NoRemakes,
     TrustedOnly,
 }
+
+export const NyaaFilterDisplayNames = new Map<NyaaFilter, string>([
+    [NyaaFilter.NoFilter, "No Filter"],
+    [NyaaFilter.NoRemakes,"No Remakes"],
+    [NyaaFilter.TrustedOnly, "Trusted Only"]
+])
 
 export enum NyaaCategory {
     AllCategories = '0_0',
@@ -33,6 +40,33 @@ export enum NyaaCategory {
     SoftwareApplications = '6_1',
     SoftwareGames = '6_2',
 }
+
+export const NyaaCategoryDisplayNames = new Map<NyaaCategory, string>([
+    [NyaaCategory.AllCategories, "All Categories"],
+    [NyaaCategory.Anime, "Anime"],
+    [NyaaCategory.AnimeMusicVideo, "Anime - Music Video"],
+    [NyaaCategory.AnimeEnglishTranslated, "Anime - English Translated"],
+    [NyaaCategory.AnimeNonEnglishTranslated, "Anime - Non-English Translated"],
+    [NyaaCategory.AnimeRaw, "Anime - Raw"],
+    [NyaaCategory.Audio, "Audio"],
+    [NyaaCategory.AudioLossless, "Audio - Lossless"],
+    [NyaaCategory.AudioLossy, "Audio - Lossy"],
+    [NyaaCategory.Literature, "Literature"],
+    [NyaaCategory.LiteratureEnglishTranslated, "Literature - English Translated"],
+    [NyaaCategory.LiteratureNonEnglishTranslated, "Literature - Non-English Translated"],
+    [NyaaCategory.LiteratureRaw, "Literature - Raw"],
+    [NyaaCategory.LiveAction, "Live Action"],
+    [NyaaCategory.LiveActionEnglishTranslated, "Live Action - English Translated"],
+    [NyaaCategory.LiveActionIdolOrPromotionalVideo, "Live Action - Idol/Promotion Video"],
+    [NyaaCategory.LiveActionNonEnglishTranslated, "Live Action - Non-English Translated"],
+    [NyaaCategory.LiveActionRaw, "Live Action - Raw"],
+    [NyaaCategory.Pictures, "Pictures"],
+    [NyaaCategory.PicturesGraphics, "Pictures - Graphics"],
+    [NyaaCategory.PicturesPhotos, "Pictures - Photos"],
+    [NyaaCategory.Software, "Software"],
+    [NyaaCategory.SoftwareApplications, "Software - Applications"],
+    [NyaaCategory.SoftwareGames, "Software - Games"],
+])
 
 export interface NyaaRssResponse {
     rss: {
@@ -66,11 +100,11 @@ export interface NyaaRssItem {
     description: string;
 }
 
-export interface NyaaSearchParameters {
+export interface NyaaSearchParameters extends NullableUndefined<{
     filter?: NyaaFilter;
     category?: NyaaCategory;
     query: string;
-}
+}> {}
 
 export interface NyaaConstructorParameters {
     baseUrl?: URL;
