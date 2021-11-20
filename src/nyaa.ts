@@ -104,6 +104,7 @@ export interface NyaaSearchParameters extends NullableUndefined<{
     filter?: NyaaFilter;
     category?: NyaaCategory;
     query: string;
+    user?: string;
 }> {}
 
 export interface NyaaConstructorParameters {
@@ -169,8 +170,12 @@ export class NyaaClient {
             page: 'rss',
             q: params.query,
             f: (params.filter ?? this.defaultFilter).toString(),
-            c: (params.category ?? this.defaultCategory).toString(),
+            c: (params.category ?? this.defaultCategory).toString()
         });
+
+        if (params.user) {
+            qs.set('u', params.user)
+        }
 
         const url = new URL(this.baseUrl.href);
         url.search = qs.toString();

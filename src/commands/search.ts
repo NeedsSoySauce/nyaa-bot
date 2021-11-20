@@ -22,13 +22,17 @@ export const search: Command = {
         .addStringOption(option =>
             option.setName('category')
                 .setDescription("Category filter, e.g. 'Anime - English Translated'")
-                .addChoices(categoryChoices)),
+                .addChoices(categoryChoices))
+        .addStringOption(option =>
+            option.setName('user')
+                .setDescription("User filter, e.g. 'subsplease'")),
     execute: async (interaction) => {
         const query = interaction.options.getString('query', true)
         const filter = interaction.options.getInteger('filter')
         const category = interaction.options.getString('category') as NyaaCategory
+        const user = interaction.options.getString('user')
 
-        const results = await nyaa.search({ query, filter, category })
+        const results = await nyaa.search({ query, filter, category, user })
 
         await interaction.reply(`${interaction.user}, your search for '${query}' returned ${results.length} result(s).`,)
     }
