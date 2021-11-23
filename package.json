@@ -13,7 +13,7 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "prepare": "husky install",
     "update-latest": "ncu -u && npm install",
-    "deploy-commands": "node --loader ts-node/esm -r dotenv/config ./scripts/deploy-commands.ts dotenv_config_path=.env"
+    "deploy-commands": "node --loader ts-node/esm -r dotenv/config ./src/index.ts dotenv_config_path=.env deploy-commands"
   },
   "keywords": [],
   "author": "",
