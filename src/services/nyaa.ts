@@ -1,6 +1,6 @@
 import { URL, URLSearchParams } from 'url';
 import { BasicRssClient, RssClient } from './rss.js';
-import { NullableUndefined } from './types';
+import { NullableUndefined } from '../types';
 
 export enum NyaaFilter {
     NoFilter,
@@ -138,7 +138,7 @@ export class NyaaClient {
     private defaultCategory = NyaaCategory.AllCategories;
     private rssClient: RssClient = new BasicRssClient();
 
-    constructor(params: NyaaConstructorParameters = {}) {
+    public constructor(params: NyaaConstructorParameters = {}) {
         this.baseUrl = params.baseUrl ?? this.baseUrl;
         this.defaultFilter = params.defaultFilter ?? this.defaultFilter;
         this.defaultCategory = params.defaultCategory ?? this.defaultCategory;

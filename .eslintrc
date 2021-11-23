@@ -52,6 +52,8 @@
                 "allowSingleExtends": true
             }
         ],
-        "@typescript-eslint/ban-ts-comment": "warn"
+        "@typescript-eslint/explicit-member-accessibility": [
+            "error"
+        ]
     }
 }

@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { Command } from './index.js';
+import { CommandInteraction } from 'discord.js';
+import { SlashCommand } from './index.js';
 
 const replacer = (key: string, value: unknown) => {
     if (typeof value === 'bigint') {
@@ -8,9 +9,12 @@ const replacer = (key: string, value: unknown) => {
     return value
 }
 
-export const debug: Command = {
-    builder: new SlashCommandBuilder().setName("debug").setDescription("Print debug information"),
-    execute: async (interaction) => {
+export class DebugSlashCommand implements SlashCommand {
+    public createBuilder(): Pick<SlashCommandBuilder, 'toJSON' | 'name'> {
+        return new SlashCommandBuilder().setName("debug").setDescription("Print debug information");
+    }
+
+    public async execute(interaction: CommandInteraction) {
         await interaction.reply({ content: JSON.stringify(interaction, replacer, 2, ), ephemeral: true })
     }
 }

@@ -6,7 +6,7 @@ export interface RssClient {
 }
 
 export class BasicRssClient implements RssClient {
-    async get<T>(url: string): Promise<T> {
+    public async get<T>(url: string): Promise<T> {
         const response = await fetch(url);
         const xml = await response.text();
 
