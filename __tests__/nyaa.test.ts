@@ -1,4 +1,4 @@
-import { NyaaClient } from '../src/nyaa.js';
+import { NyaaClient } from '../src/services/nyaa.js';
 import { MockRssClient } from './mocks.js';
 
 describe('NyaaClient', () => {

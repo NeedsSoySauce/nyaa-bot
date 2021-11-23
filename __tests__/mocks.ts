@@ -1,11 +1,11 @@
 import { XMLParser } from 'fast-xml-parser';
 import fs from 'fs';
-import { RssClient } from '../src/rss.js';
+import { RssClient } from '../src/services/rss.js';
 
 export class MockRssClient implements RssClient {
     private mappings: Record<string, string>;
 
-    constructor(mappings: Record<string, string>) {
+    public constructor(mappings: Record<string, string>) {
         this.mappings = Object.fromEntries(
             Object.entries(mappings).map(([url, filepath]) => [this.urlToKey(url), filepath]),
         );
@@ -17,7 +17,7 @@ export class MockRssClient implements RssClient {
         return key.toString();
     }
 
-    async get<T>(url: string): Promise<T> {
+    public async get<T>(url: string): Promise<T> {
         const path = this.mappings[this.urlToKey(url)];
 
         if (!path) {
