@@ -36,8 +36,7 @@ const deployCommands = async (commands: SlashCommand[]) => {
     } catch (error) {
       console.error(error);
     }
-    // process.exit(0)
-    return Promise.resolve()
+    process.exit(0)
 }
 
 const startCommandClient = (commands: SlashCommand[]) => {
