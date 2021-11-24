@@ -105,6 +105,8 @@ export interface NyaaSearchParameters extends NullableUndefined<{
     category?: NyaaCategory;
     query: string;
     user?: string;
+    limit?: number;
+    offset?: number
 }> {}
 
 export interface NyaaConstructorParameters {
@@ -166,6 +168,9 @@ export class NyaaClient {
     }
 
     public async search(params: NyaaSearchParameters): Promise<NyaaSearchResult[]> {
+        const offset = params.offset ?? 0;
+        const limit = params.limit ?? 10;
+
         const qs = new URLSearchParams({
             page: 'rss',
             q: params.query,
@@ -180,10 +185,9 @@ export class NyaaClient {
         const url = new URL(this.baseUrl.href);
         url.search = qs.toString();
 
-        console.log(`${url}`)
-
         const response = await this.rssClient.get<NyaaRssResponse>(`${url}`);
         const results = this.mapRssResponse(response)
-        return results;
+        const page = results.slice(offset, offset + limit)
+        return page;
     }
 }

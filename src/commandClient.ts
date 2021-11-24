@@ -1,12 +1,13 @@
-import { Client, ClientOptions, Collection, Interaction, Message } from 'discord.js'
-import { SlashCommand } from './commands/index.js'
+import { ButtonInteraction, Client, ClientOptions, Collection, CommandInteraction, Interaction, Message } from 'discord.js'
+import { Command } from './commands/index.js'
 
 export interface CommandClientConstructorParameters extends ClientOptions {
-    commands?: SlashCommand[]
+    commands?: Command[];
 }
 
 export class CommandClient extends Client {
-    public commands: Collection<string, SlashCommand> = new Collection()
+    public buttonCommands: Command[] = []
+    public slashCommands: Collection<string, Command> = new Collection()
 
     public constructor(params: CommandClientConstructorParameters) {
         super(params)
@@ -18,24 +19,42 @@ export class CommandClient extends Client {
         this.on('ready', this.handleReady.bind(this))
     }
 
-    public registerCommands(commands: SlashCommand[]) {
+    public registerCommands(commands: Command[]) {
         commands.forEach(command => {
-            this.commands.set(command.createBuilder().name, command)
+            const { isButtonCommand, isSlashCommand } = command.commandTypes
+            if (isButtonCommand) this.buttonCommands.push(command)
+            if (!isSlashCommand) return;
+            const builder = command.createSlashCommandBuilder()
+            if (!builder) return;
+            this.slashCommands.set(builder.name, command)
         })
     }
 
-    private async handleInteraction(interaction: Interaction) {
-        if (!interaction.isCommand()) return;
-
-        const command = this.commands.get(interaction.commandName)
-
-        if (!command) return;
-
+    private async handleButtonInteraction(interaction: ButtonInteraction): Promise<void> {
+        const command = this.slashCommands.find(c => c.isButtonCommandExecutor(interaction.customId))
         try {
-            await command.execute(interaction);
+            await command?.executeButtonCommand(interaction)
         } catch (error) {
             console.error(error);
             await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+        }
+    }
+
+    private async handleCommandInteraction(interaction: CommandInteraction): Promise<void> {
+        const command = this.slashCommands.get(interaction.commandName)
+        try {
+            await command?.executeSlashCommand(interaction)
+        } catch (error) {
+            console.error(error);
+            await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+        }
+    }
+
+    private async handleInteraction(interaction: Interaction) {
+        if (interaction.isButton()) {
+            await this.handleButtonInteraction(interaction)
+        } else if (interaction.isCommand()) {
+            await this.handleCommandInteraction(interaction)
         }
     }
 

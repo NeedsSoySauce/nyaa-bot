@@ -4,16 +4,18 @@ import { Intents } from 'discord.js';
 import { MongoClient } from 'mongodb';
 import { EOL } from 'node:os';
 import { CommandClient } from './commandClient.js';
-import { DebugSlashCommand, SearchSlashCommand, SlashCommand } from './commands/index.js';
+import { Command, DebugSlashCommand, SearchSlashCommand } from './commands/index.js';
 import { getEnvironmentVariable } from './env.js';
 import { CommandRepository, DatabaseCommandRepository } from './services/commandRepository.js';
+import { NyaaClient } from './services/nyaa.js';
 import { DatabaseUserRepository, UserRepository } from './services/userRepository.js';
+import { notNull } from './util.js';
 
 const databaseUrl = getEnvironmentVariable("DATABASE_URL")
 const mongoClient = new MongoClient(databaseUrl);
 const db = mongoClient.db("nyaaDB");
 
-const deployCommands = async (commands: SlashCommand[]) => {
+const deployCommands = async (commands: Command[]) => {
   const applicationId = getEnvironmentVariable('DISCORD_APPLICATION_ID');
   const guildId = getEnvironmentVariable('DISCORD_GUILD_ID');
 
@@ -22,7 +24,7 @@ const deployCommands = async (commands: SlashCommand[]) => {
     try {
       console.log('Started refreshing application (/) commands.');
 
-      const builders = commands.map(c => c.createBuilder())
+      const builders = commands.map(c => c.createSlashCommandBuilder()).filter(notNull)
 
       console.log(`Found ${commands.length} command(s):`)
       console.log(`${builders.map(builder => `/${ builder.name}`).join(EOL)}`)
@@ -39,7 +41,7 @@ const deployCommands = async (commands: SlashCommand[]) => {
     process.exit(0)
 }
 
-const startCommandClient = (commands: SlashCommand[]) => {
+const startCommandClient = (commands: Command[]) => {
   const commandClient = new CommandClient({
       intents: [
           Intents.FLAGS.GUILDS,
@@ -56,10 +58,14 @@ const startCommandClient = (commands: SlashCommand[]) => {
 }
 
 const main = async () => {
+  const nyaaClient = new NyaaClient()
   const userRepository: UserRepository = new DatabaseUserRepository(db)
   const commandRepository: CommandRepository = new DatabaseCommandRepository(db)
 
-  const commands = [new DebugSlashCommand(), new SearchSlashCommand(userRepository, commandRepository)]
+  const commands: Command[] = [
+    new DebugSlashCommand(),
+    new SearchSlashCommand(nyaaClient, userRepository, commandRepository)
+  ]
 
   if (process.argv.some(value => value === 'deploy-commands')) {
     await deployCommands(commands)

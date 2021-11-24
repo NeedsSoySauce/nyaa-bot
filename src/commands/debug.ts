@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { CommandInteraction } from 'discord.js';
-import { SlashCommand } from './index.js';
+import { BaseCommand } from './base.js';
+import { CommandTypes } from './index.js';
 
 const replacer = (key: string, value: unknown) => {
     if (typeof value === 'bigint') {
@@ -9,12 +10,16 @@ const replacer = (key: string, value: unknown) => {
     return value
 }
 
-export class DebugSlashCommand implements SlashCommand {
-    public createBuilder(): Pick<SlashCommandBuilder, 'toJSON' | 'name'> {
+export class DebugSlashCommand extends BaseCommand {
+    public commandTypes: CommandTypes = {
+        isSlashCommand: true
+    }
+
+    public createSlashCommandBuilder(): Pick<SlashCommandBuilder, 'toJSON' | 'name'> {
         return new SlashCommandBuilder().setName("debug").setDescription("Print debug information");
     }
 
-    public async execute(interaction: CommandInteraction) {
+    public async executeSlashCommand(interaction: CommandInteraction) {
         await interaction.reply({ content: JSON.stringify(interaction, replacer, 2, ), ephemeral: true })
     }
 }
