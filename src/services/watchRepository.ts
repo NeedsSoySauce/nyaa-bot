@@ -1,4 +1,4 @@
-import { Collection, Db, ObjectId } from 'mongodb';
+import { Collection, Db } from 'mongodb';
 import { Watch } from '../models/watch.js';
 import { PagedResult } from '../types.js';
 

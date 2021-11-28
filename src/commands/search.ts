@@ -1,4 +1,4 @@
-import { bold, hyperlink, SlashCommandBuilder } from '@discordjs/builders';
+import { bold, hyperlink, SlashCommandBuilder, inlineCode } from '@discordjs/builders';
 import { APIEmbed } from 'discord-api-types';
 import { ButtonInteraction, CacheType, CommandInteraction, EmbedFieldData, MessageActionRow, MessageButton, MessageEmbed, MessagePayload, WebhookEditMessageOptions } from 'discord.js';
 import { SearchCommand } from '../models/searchCommand.js';
@@ -117,7 +117,9 @@ export class SearchSlashCommand extends BaseCommand {
         const command = new SearchCommand({ ...searchParameters, userId })
 
         if (interaction.customId === 'search-watch') {
-            await this.watch(interaction.user.id, command);
+            const watch = await this.watch(interaction.user.id, command);
+            const watchEmbed = this.createWatchEmbed(watch)
+            await interaction.user.send({ embeds: [watchEmbed] })
             return;
         }
 
@@ -134,7 +136,6 @@ export class SearchSlashCommand extends BaseCommand {
     }
 
     private async watch(userId: string, searchCommand: SearchCommand) {
-        console.log('watch', searchCommand)
         return this.watchRepository.addOrUpdateWatch(new Watch(userId, { ...searchCommand, lastInfoHash: null }))
     }
 
@@ -215,6 +216,7 @@ export class SearchSlashCommand extends BaseCommand {
         const description = items.map((value, i) => this.formatItem(value, `${i + pageStart}. `)).join('\n')
         embed.setDescription(description)
 
+        // #TODO disable watch button and or notify user if already watching
         const next = new MessageActionRow()
             .addComponents(
                 new MessageButton()
@@ -237,5 +239,34 @@ export class SearchSlashCommand extends BaseCommand {
             embeds: [embed],
             components: [next]
         })
+    }
+
+    private createWatchEmbed(watch: Watch) {
+        const { filter, category, query, user } = watch
+        const embed = new MessageEmbed().setTimestamp()
+
+        const filterDisplayName = filter != null ? NyaaFilterDisplayNames.get(filter) ?? `Error (${filter})` : null
+        const categoryDisplayName = category != null ? NyaaCategoryDisplayNames.get(category) ?? `Error (${category})` : null
+
+        const embedFieldData: EmbedFieldData[] = [{ name: 'Query', value: query, inline: true }]
+
+        if (filterDisplayName) {
+            embedFieldData.push({ name: 'Filter', value: filterDisplayName, inline: true })
+        }
+
+        if (categoryDisplayName) {
+            embedFieldData.push({ name: 'Category', value: categoryDisplayName, inline: true })
+        }
+
+        if (user) {
+            embedFieldData.push({ name: 'User', value: user, inline: true })
+        }
+
+        embed.addFields(embedFieldData)
+
+        const description = `The following search is now being watched. Enter ${inlineCode('/unwatch')} followed by ${inlineCode(watch.id)} to stop watching for changes.`
+        embed.setDescription(description)
+
+        return embed
     }
 }
