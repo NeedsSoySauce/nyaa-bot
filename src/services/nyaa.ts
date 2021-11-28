@@ -1,6 +1,7 @@
 import { URL, URLSearchParams } from 'url';
+import { ArrayPager } from '../pager.js';
+import { NullableUndefined, PagedResult } from '../types.js';
 import { BasicRssClient, RssClient } from './rss.js';
-import { NullableUndefined } from '../types';
 
 export enum NyaaFilter {
     NoFilter,
@@ -8,11 +9,14 @@ export enum NyaaFilter {
     TrustedOnly,
 }
 
-export const NyaaFilterDisplayNames = new Map<NyaaFilter, string>([
+const nyaaFilterPairs: [NyaaFilter, string][] = [
     [NyaaFilter.NoFilter, "No Filter"],
     [NyaaFilter.NoRemakes,"No Remakes"],
     [NyaaFilter.TrustedOnly, "Trusted Only"]
-])
+]
+
+export const NyaaFilterDisplayNames = new Map(nyaaFilterPairs)
+export const ReverseNyaaFilterDisplayNames = new Map(nyaaFilterPairs.map(([k, v]) => [v, k]))
 
 export enum NyaaCategory {
     AllCategories = '0_0',
@@ -41,7 +45,7 @@ export enum NyaaCategory {
     SoftwareGames = '6_2',
 }
 
-export const NyaaCategoryDisplayNames = new Map<NyaaCategory, string>([
+const nyaaCategoryPairs: [NyaaCategory, string][] =  [
     [NyaaCategory.AllCategories, "All Categories"],
     [NyaaCategory.Anime, "Anime"],
     [NyaaCategory.AnimeMusicVideo, "Anime - Music Video"],
@@ -66,7 +70,10 @@ export const NyaaCategoryDisplayNames = new Map<NyaaCategory, string>([
     [NyaaCategory.Software, "Software"],
     [NyaaCategory.SoftwareApplications, "Software - Applications"],
     [NyaaCategory.SoftwareGames, "Software - Games"],
-])
+]
+
+export const NyaaCategoryDisplayNames = new Map(nyaaCategoryPairs)
+export const ReverseNyaaCategoryDisplayNames = new Map(nyaaCategoryPairs.map(([k, v]) => [v, k]))
 
 export interface NyaaRssResponse {
     rss: {
@@ -105,8 +112,8 @@ export interface NyaaSearchParameters extends NullableUndefined<{
     category?: NyaaCategory;
     query: string;
     user?: string;
-    limit?: number;
-    offset?: number
+    pageNumber?: number;
+    pageSize?: number
 }> {}
 
 export interface NyaaConstructorParameters {
@@ -163,13 +170,13 @@ export class NyaaClient {
             "nyaaComments": item['nyaa:comments'],
             "nyaaTrusted": item['nyaa:trusted'] === 'Yes',
             "nyaaRemake": item['nyaa:remake'] === 'Yes',
-            description: "string"
+            description: item.description
         })) ?? []
     }
 
-    public async search(params: NyaaSearchParameters): Promise<NyaaSearchResult[]> {
-        const offset = params.offset ?? 0;
-        const limit = params.limit ?? 10;
+    public async search(params: NyaaSearchParameters): Promise<PagedResult<NyaaSearchResult>> {
+        const pageNumber = params.pageNumber ?? 0;
+        const pageSize = params.pageSize ?? 10;
 
         const qs = new URLSearchParams({
             page: 'rss',
@@ -187,7 +194,9 @@ export class NyaaClient {
 
         const response = await this.rssClient.get<NyaaRssResponse>(`${url}`);
         const results = this.mapRssResponse(response)
-        const page = results.slice(offset, offset + limit)
+
+        const pager = new ArrayPager(results, pageSize)
+        const page = pager.getPage(pageNumber)
         return page;
     }
 }

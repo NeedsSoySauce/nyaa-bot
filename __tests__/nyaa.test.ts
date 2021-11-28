@@ -13,8 +13,8 @@ describe('NyaaClient', () => {
         const client = new NyaaClient({ rssClient });
         const results = await client.search({
             query: 'one punch man 1080p season 1',
-            limit: 36
+            pageSize: 36
         });
-        expect(results).toHaveLength(35);
+        expect(results.items).toHaveLength(35);
     });
 });

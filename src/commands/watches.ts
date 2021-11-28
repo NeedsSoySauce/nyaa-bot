@@ -1,0 +1,113 @@
+import { bold, SlashCommandBuilder } from '@discordjs/builders';
+import { ButtonInteraction, CommandInteraction, MessageActionRow, MessageButton, MessageEmbed, MessagePayload, WebhookEditMessageOptions } from 'discord.js';
+import { Watch } from '../models/watch.js';
+import { NyaaCategoryDisplayNames, NyaaFilterDisplayNames } from '../services/nyaa.js';
+import { WatchRepository } from '../services/watchRepository.js';
+import { PagedResult } from '../types.js';
+import { error, notNull } from '../util.js';
+import { BaseCommand } from './base.js';
+import { CommandTypes } from './index.js';
+
+export class WatchesCommand extends BaseCommand {
+    public commandTypes: CommandTypes = {
+        isSlashCommand: true
+    };
+
+    private watchRepository: WatchRepository;
+
+    public constructor(watchRepository: WatchRepository) {
+        super()
+        this.watchRepository = watchRepository;
+    }
+
+    public createSlashCommandBuilder() {
+        return new SlashCommandBuilder().setName("watches").setDescription("List active watches")
+    }
+
+    public isButtonCommandExecutor(customId: string): boolean {
+        return customId === 'watches-previous' || customId === 'watches-next'
+    }
+
+    public async executeSlashCommand(interaction: CommandInteraction) {
+        await interaction.deferReply({ ephemeral: true })
+
+        const page = await this.watchRepository.getWatches({ userId: interaction.user.id })
+
+        const message = this.createMessage(page)
+
+        await interaction.editReply(message)
+    }
+
+    public async executeButtonCommand(interaction: ButtonInteraction): Promise<void> {
+        await interaction.deferUpdate()
+
+        const embed = interaction.message.embeds[0]
+
+        if (!embed.fields || !embed.footer) {
+            throw Error("Invalid embed type")
+        }
+
+        const pagingParameters = embed.footer ? this.parsePagingParameters(embed.footer.text) : error("Paging text not found")
+        pagingParameters.pageNumber += interaction.customId === 'watches-next' ? 1 : -1
+
+        const page = await this.watchRepository.getWatches({
+            ...pagingParameters,
+            userId: interaction.user.id
+        })
+
+        const message = this.createMessage(page)
+
+        await interaction.editReply(message);
+    }
+
+    private parsePagingParameters(text: string) {
+        const parts = text.split(' ')
+        const pageStart = Number(parts[1])
+        const offset = pageStart - 1
+        const pageNumber = offset / 10
+        return {
+            pageNumber,
+            pageSize: 10
+        }
+    }
+
+    private formatItem(item: Watch, prefix: string) {
+        const filterDisplayName = item.filter ? NyaaFilterDisplayNames.get(item.filter) : null
+        const categoryDisplayName = item.category ? NyaaCategoryDisplayNames.get(item.category) : null
+        const properties = [ item.query, filterDisplayName, categoryDisplayName, item.user ].filter(notNull)
+        return `${bold(prefix)}${properties.join(', ')}`
+    }
+
+    private createMessage(page: PagedResult<Watch>): string | MessagePayload | WebhookEditMessageOptions {
+        const { items } = page
+
+        const embed = new MessageEmbed().setTimestamp()
+
+        const offset = page.pageNumber * page.pageSize
+        const pageStart = Math.min(offset + 1, page.total)
+        const pageEnd = Math.min(offset + page.pageSize, page.total)
+        embed.setFooter(`Showing ${pageStart} to ${pageEnd} of ${page.total} results`)
+
+        const description = items.map((value, i) => this.formatItem(value, `${i + pageStart}. `)).join('\n')
+        embed.setDescription(description)
+
+        const next = new MessageActionRow()
+            .addComponents(
+                new MessageButton()
+                    .setCustomId('watches-previous')
+                    .setLabel('Previous page')
+                    .setStyle('PRIMARY')
+                    .setDisabled(!page.hasPrevious),
+                new MessageButton()
+                    .setCustomId('watches-next')
+                    .setLabel('Next page')
+                    .setStyle('PRIMARY')
+                    .setDisabled(!page.hasNext),
+            );
+
+        return ({
+            embeds: [embed],
+            components: [next]
+        })
+    }
+}

@@ -5,10 +5,12 @@ import { MongoClient } from 'mongodb';
 import { EOL } from 'node:os';
 import { CommandClient } from './commandClient.js';
 import { Command, DebugSlashCommand, SearchSlashCommand } from './commands/index.js';
+import { WatchesCommand } from './commands/watches.js';
 import { getEnvironmentVariable } from './env.js';
 import { CommandRepository, DatabaseCommandRepository } from './services/commandRepository.js';
 import { NyaaClient } from './services/nyaa.js';
 import { DatabaseUserRepository, UserRepository } from './services/userRepository.js';
+import { DatabaseWatchRepository, WatchRepository } from './services/watchRepository.js';
 import { notNull } from './util.js';
 
 const databaseUrl = getEnvironmentVariable("DATABASE_URL")
@@ -61,10 +63,12 @@ const main = async () => {
   const nyaaClient = new NyaaClient()
   const userRepository: UserRepository = new DatabaseUserRepository(db)
   const commandRepository: CommandRepository = new DatabaseCommandRepository(db)
+  const watchRepository: WatchRepository = new DatabaseWatchRepository(db)
 
   const commands: Command[] = [
     new DebugSlashCommand(),
-    new SearchSlashCommand(nyaaClient, userRepository, commandRepository)
+    new SearchSlashCommand(nyaaClient, userRepository, commandRepository, watchRepository),
+    new WatchesCommand(watchRepository)
   ]
 
   if (process.argv.some(value => value === 'deploy-commands')) {

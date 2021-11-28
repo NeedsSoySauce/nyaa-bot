@@ -8,3 +8,13 @@ export const ellipsis = (text: string, maxLength: number) => {
 }
 
 export const notNull = <T>(value?: T | null): value is T => value !== null
+
+export const range = (start: number, stop: number, step = 1) => {
+    const array = []
+    for (let i = start; i < stop; i += step) {
+        array.push(i)
+    }
+    return array
+}
+
+export const error = (message: string) => { throw Error(message) }
