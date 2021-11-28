@@ -106,8 +106,8 @@ export class SearchSlashCommand extends BaseCommand {
 
         const searchParameters = this.parseSearchParameters(embed)
 
-        if (interaction.customId !== 'watch') {
-            searchParameters.pageNumber += interaction.customId === 'next' ? 1 : -1
+        if (interaction.customId !== 'search-watch') {
+            searchParameters.pageNumber += interaction.customId === 'search-next' ? 1 : -1
         }
 
         const page = await this.nyaaClient.search(searchParameters)
@@ -116,7 +116,7 @@ export class SearchSlashCommand extends BaseCommand {
 
         const command = new SearchCommand({ ...searchParameters, userId })
 
-        if (interaction.customId === 'watch') {
+        if (interaction.customId === 'search-watch') {
             await this.watch(interaction.user.id, command);
             return;
         }
