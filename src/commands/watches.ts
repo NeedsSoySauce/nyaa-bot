@@ -1,4 +1,4 @@
-import { bold, SlashCommandBuilder } from '@discordjs/builders';
+import { bold, inlineCode, SlashCommandBuilder } from '@discordjs/builders';
 import { ButtonInteraction, CommandInteraction, MessageActionRow, MessageButton, MessageEmbed, MessagePayload, WebhookEditMessageOptions } from 'discord.js';
 import { Watch } from '../models/watch.js';
 import { NyaaCategoryDisplayNames, NyaaFilterDisplayNames } from '../services/nyaa.js';
@@ -10,7 +10,8 @@ import { CommandTypes } from './index.js';
 
 export class WatchesCommand extends BaseCommand {
     public commandTypes: CommandTypes = {
-        isSlashCommand: true
+        isSlashCommand: true,
+        isButtonCommand: true
     };
 
     private watchRepository: WatchRepository;
@@ -75,7 +76,7 @@ export class WatchesCommand extends BaseCommand {
         const filterDisplayName = item.filter ? NyaaFilterDisplayNames.get(item.filter) : null
         const categoryDisplayName = item.category ? NyaaCategoryDisplayNames.get(item.category) : null
         const properties = [ item.query, filterDisplayName, categoryDisplayName, item.user ].filter(notNull)
-        return `${bold(prefix)}${properties.join(', ')}`
+        return `${bold(prefix)}${properties.join(', ')} [${item.id}]`
     }
 
     private createMessage(page: PagedResult<Watch>): string | MessagePayload | WebhookEditMessageOptions {
@@ -88,7 +89,8 @@ export class WatchesCommand extends BaseCommand {
         const pageEnd = Math.min(offset + page.pageSize, page.total)
         embed.setFooter(`Showing ${pageStart} to ${pageEnd} of ${page.total} results`)
 
-        const description = items.map((value, i) => this.formatItem(value, `${i + pageStart}. `)).join('\n')
+        const resultText = items.map((value, i) => this.formatItem(value, `${i + pageStart}. `)).join('\n')
+        const description = `Active watches are listed below with IDs in [square brackets]. Use ${inlineCode('/unwatch')} to remove a watch.\n\n${resultText}`
         embed.setDescription(description)
 
         const next = new MessageActionRow()

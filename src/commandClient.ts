@@ -31,7 +31,7 @@ export class CommandClient extends Client {
     }
 
     private async handleButtonInteraction(interaction: ButtonInteraction): Promise<void> {
-        const command = this.slashCommands.find(c => c.isButtonCommandExecutor(interaction.customId))
+        const command = this.buttonCommands.find(c => c.isButtonCommandExecutor(interaction.customId))
         try {
             await command?.executeButtonCommand(interaction)
         } catch (error) {

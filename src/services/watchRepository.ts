@@ -1,4 +1,4 @@
-import { Collection, Db } from 'mongodb';
+import { Collection, Db, ObjectId } from 'mongodb';
 import { Watch } from '../models/watch.js';
 import { PagedResult } from '../types.js';
 
@@ -11,6 +11,7 @@ export interface GetWatchesParameters {
 export interface WatchRepository {
     addOrUpdateWatch(watch: Watch): Promise<Watch>
     getWatches(params: GetWatchesParameters): Promise<PagedResult<Watch>>
+    deleteWatch(userId: string, id: string): Promise<Watch | null>
 }
 
 export class DatabaseWatchRepository implements WatchRepository {
@@ -26,15 +27,17 @@ export class DatabaseWatchRepository implements WatchRepository {
             user: 1
         }, { unique: true })
         this.collection.createIndex({ createdOnUtc: 1 })
+        this.collection.createIndex({ userId: 1, id: 1 }, { unique: true })
     }
 
     public async addOrUpdateWatch(watch: Watch) {
-        const { createdOnUtc, updatedOnUtc, lastInfoHash, ...filterProperties } = watch
+        const { id, createdOnUtc, updatedOnUtc, lastInfoHash, ...filterProperties } = watch
         const now = new Date();
         await this.collection.updateOne(filterProperties, {
             $setOnInsert: {
                 ...filterProperties,
-                createdOnUtc
+                createdOnUtc,
+                id
             },
             $set: {
                 updatedOnUtc: now,
@@ -77,5 +80,10 @@ export class DatabaseWatchRepository implements WatchRepository {
             hasNext: pageNumber < pageCount - 1,
             hasPrevious: pageNumber > 0
         }
+    }
+
+    public async deleteWatch(userId: string, id: string): Promise<Watch | null> {
+        const result = await this.collection.findOneAndDelete({ userId, id })
+        return result.value
     }
 }

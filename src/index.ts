@@ -5,6 +5,7 @@ import { MongoClient } from 'mongodb';
 import { EOL } from 'node:os';
 import { CommandClient } from './commandClient.js';
 import { Command, DebugSlashCommand, SearchSlashCommand } from './commands/index.js';
+import { UnwatchCommand } from './commands/unwatch.js';
 import { WatchesCommand } from './commands/watches.js';
 import { getEnvironmentVariable } from './env.js';
 import { CommandRepository, DatabaseCommandRepository } from './services/commandRepository.js';
@@ -68,7 +69,8 @@ const main = async () => {
   const commands: Command[] = [
     new DebugSlashCommand(),
     new SearchSlashCommand(nyaaClient, userRepository, commandRepository, watchRepository),
-    new WatchesCommand(watchRepository)
+    new WatchesCommand(watchRepository),
+    new UnwatchCommand(watchRepository)
   ]
 
   if (process.argv.some(value => value === 'deploy-commands')) {
