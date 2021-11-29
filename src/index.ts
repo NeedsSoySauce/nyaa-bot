@@ -4,6 +4,7 @@ import { Intents } from 'discord.js';
 import { MongoClient } from 'mongodb';
 import { EOL } from 'node:os';
 import { CommandClient } from './commandClient.js';
+import { HelpSlashCommand } from './commands/help.js';
 import { Command, DebugSlashCommand, SearchSlashCommand } from './commands/index.js';
 import { UnwatchCommand } from './commands/unwatch.js';
 import { WatchesCommand } from './commands/watches.js';
@@ -72,6 +73,9 @@ const main = async () => {
     new WatchesCommand(watchRepository),
     new UnwatchCommand(watchRepository)
   ]
+
+  const helpCommand = new HelpSlashCommand(commands)
+  commands.push(helpCommand)
 
   if (process.argv.some(value => value === 'deploy-commands')) {
     await deployCommands(commands)

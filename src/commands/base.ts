@@ -6,7 +6,7 @@ import { Command, CommandTypes } from './index.js';
 export abstract class BaseCommand implements Command {
     public readonly abstract commandTypes: CommandTypes;
 
-    public createSlashCommandBuilder(): Pick<SlashCommandBuilder, 'toJSON' | 'name'> | null {
+    public createSlashCommandBuilder(): Pick<SlashCommandBuilder, 'toJSON' | 'name' | 'description'> | null {
         return null
     }
 

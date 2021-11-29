@@ -119,7 +119,8 @@ export class SearchSlashCommand extends BaseCommand {
         if (interaction.customId === 'search-watch') {
             const watch = await this.watch(interaction.user.id, command);
             const watchEmbed = this.createWatchEmbed(watch)
-            await interaction.user.send({ embeds: [watchEmbed] })
+            await interaction.followUp({ embeds: [watchEmbed], ephemeral: true })
+            // await interaction.user.send({ embeds: [watchEmbed] })
             return;
         }
 

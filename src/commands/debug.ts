@@ -15,7 +15,7 @@ export class DebugSlashCommand extends BaseCommand {
         isSlashCommand: true
     }
 
-    public createSlashCommandBuilder(): Pick<SlashCommandBuilder, 'toJSON' | 'name'> {
+    public createSlashCommandBuilder() {
         return new SlashCommandBuilder().setName("debug").setDescription("Print debug information");
     }
 

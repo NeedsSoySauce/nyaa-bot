@@ -13,7 +13,7 @@ export interface CommandTypes extends NullableUndefined<{
 
 export interface Command {
     readonly commandTypes: CommandTypes
-    createSlashCommandBuilder(): Pick<SlashCommandBuilder, "toJSON" | "name"> | null,
+    createSlashCommandBuilder(): Pick<SlashCommandBuilder, "toJSON" | "name" | "description"> | null,
     executeSlashCommand(interaction: CommandInteraction): Promise<void>
     isButtonCommandExecutor(customId: string): boolean;
     executeButtonCommand(interaction: ButtonInteraction): Promise<void>
