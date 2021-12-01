@@ -78,6 +78,7 @@ export class CommandClient extends Client implements NyaaNotificationService {
     }
 
     public async notifyWatchChanged(userId: string, changes: [Watch, NyaaSearchResult[]][]): Promise<void> {
+        if (changes.length === 0) return
         const user = await this.users.fetch(userId)
         const embed = new MessageEmbed()
         const results = changes.flatMap(c => c[1])

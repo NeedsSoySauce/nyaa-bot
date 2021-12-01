@@ -18,7 +18,7 @@ import { notNull } from './util.js';
 
 const databaseUrl = getEnvironmentVariable("DATABASE_URL")
 const mongoClient = new MongoClient(databaseUrl);
-const db = mongoClient.db("nyaaDB");
+const db = mongoClient.db();
 
 const main = async () => {
   const nyaaClient = new NyaaClient()
@@ -52,6 +52,11 @@ const main = async () => {
 
         await rest.put(
           Routes.applicationGuildCommands(applicationId, guildId),
+          { body: builders.map(builder => builder.toJSON()) },
+        );
+
+        await rest.put(
+          Routes.applicationCommands(applicationId),
           { body: builders.map(builder => builder.toJSON()) },
         );
 
