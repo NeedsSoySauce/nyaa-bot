@@ -1,4 +1,4 @@
-import { bold, hyperlink, SlashCommandBuilder, inlineCode } from '@discordjs/builders';
+import { bold, hyperlink, inlineCode, SlashCommandBuilder } from '@discordjs/builders';
 import { APIEmbed } from 'discord-api-types';
 import { ButtonInteraction, CacheType, CommandInteraction, EmbedFieldData, MessageActionRow, MessageButton, MessageEmbed, MessagePayload, WebhookEditMessageOptions } from 'discord.js';
 import { SearchCommand } from '../models/searchCommand.js';
@@ -8,8 +8,7 @@ import { CommandRepository } from '../services/commandRepository.js';
 import { NyaaCategory, NyaaCategoryDisplayNames, NyaaClient, NyaaFilter, NyaaFilterDisplayNames, NyaaSearchPagedResult, NyaaSearchParameters, NyaaSearchResult, ReverseNyaaCategoryDisplayNames, ReverseNyaaFilterDisplayNames } from "../services/nyaaClient.js";
 import { UserRepository } from "../services/userRepository.js";
 import { WatchRepository } from '../services/watchRepository.js';
-import { PagedResult } from '../types.js';
-import { ellipsis, error } from '../util.js';
+import { ellipsis, error, escapeDiscordMarkdown } from '../util.js';
 import { BaseCommand } from './base.js';
 import { CommandOptionChoice, CommandTypes } from './index.js';
 
@@ -181,16 +180,8 @@ export class SearchSlashCommand extends BaseCommand {
         }
     }
 
-    private escapeMarkdown(text: string) {
-        const characters = ['*', '_', '>', '`']
-        return characters
-            .reduce((prev, curr) => prev.replace(new RegExp(`\\${curr}`, 'g'), `\\${curr}`), text)
-            .replace(/\[/g, '(')
-            .replace(/\]/g, ')')
-    }
-
     private formatItem(item: NyaaSearchResult, prefix: string) {
-        const text = ellipsis(this.escapeMarkdown(item.title.trim()), 200)
+        const text = ellipsis(escapeDiscordMarkdown(item.title.trim()), 200)
         return `${bold(prefix)}${hyperlink(text, item.guid)}`
     }
 

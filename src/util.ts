@@ -26,3 +26,11 @@ export const promisify = <T>(callback: () => T): () => Promise<T> => () => new P
         reject(err)
     }
 })
+
+export const escapeDiscordMarkdown = (text: string) => {
+    const characters = ['*', '_', '>', '`']
+    return characters
+        .reduce((prev, curr) => prev.replace(new RegExp(`\\${curr}`, 'g'), `\\${curr}`), text)
+        .replace(/\[/g, '(')
+        .replace(/\]/g, ')')
+}

@@ -1,7 +1,8 @@
-import { bold, hyperlink } from '@discordjs/builders';
+import { hyperlink } from '@discordjs/builders';
 import { ButtonInteraction, Client, ClientOptions, Collection, CommandInteraction, Interaction, Message, MessageEmbed } from 'discord.js';
 import { Command } from '../commands/index.js';
 import { Watch } from '../models/watch.js';
+import { ellipsis, escapeDiscordMarkdown } from '../util.js';
 import { NyaaSearchResult } from './nyaaClient.js';
 
 export interface NyaaNotificationService {
@@ -78,16 +79,15 @@ export class CommandClient extends Client implements NyaaNotificationService {
 
     public async notifyWatchChanged(userId: string, changes: [Watch, NyaaSearchResult[]][]): Promise<void> {
         const user = await this.users.fetch(userId)
-
         const embed = new MessageEmbed()
-
         const results = changes.flatMap(c => c[1])
-
-        const description = results
-            .map(result => ` ${bold('•')} ${hyperlink(result.title, result.guid)}`)
+        const resultsList = results
+            .map(result => {
+                const text = ellipsis(escapeDiscordMarkdown(result.title.trim()), 200)
+                return ` • ${hyperlink(text, result.guid)}`
+            })
             .join('\n')
-        embed.setDescription(description)
-
+        embed.setDescription(`New results are available.\n\n${resultsList}`)
         user.send({
             embeds: [embed]
         })

@@ -75,14 +75,20 @@ export class NyaaWatcher {
                 const watches = await this.watchRepository.getWatches(params)
                 const promises = watches.items.map(watch => this.getNewResults(watch))
                 const results = await Promise.all(promises)
-                changes.push(...results)
+                changes.push(...results.filter(r => r[1].length > 0))
                 params.pageNumber += 1
                 hasNext = watches.hasNext
             }
 
-            console.log(JSON.stringify(changes, null, 2))
+            const promises: Promise<unknown>[] = changes.map(([watch, results]) => {
+                const infoHashes = [...watch.infoHashes, ...results.map(result => result.nyaaInfoHash)]
+                return this.watchRepository.addOrUpdateWatch({ ...watch, infoHashes })
+            })
 
-            await this.nyaaNotificationService.notifyWatchChanged(userId, changes)
+            const notificationPromise = this.nyaaNotificationService.notifyWatchChanged(userId, changes)
+            promises.push(notificationPromise)
+
+            await Promise.all(promises)
         }
         /* eslint-enable no-await-in-loop */
     }

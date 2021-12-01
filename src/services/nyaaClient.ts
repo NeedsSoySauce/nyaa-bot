@@ -117,10 +117,11 @@ export interface NyaaSearchParameters extends NullableUndefined<{
 }> {}
 
 export interface NyaaConstructorParameters {
-    baseUrl?: URL;
+    baseUrl?: string;
     defaultFilter?: NyaaFilter;
     defaultCategory?: NyaaCategory;
     rssClient?: RssClient;
+    trackersUrl?: string;
 }
 
 export interface NyaaSearchResult {
@@ -147,7 +148,7 @@ export interface NyaaSearchPagedResult extends PagedResult<NyaaSearchResult> {
 }
 
 export class NyaaClient {
-    private baseUrl = new URL('https://nyaa.si/');
+    private baseUrl = 'https://nyaa.si/';
     private defaultFilter = NyaaFilter.NoFilter;
     private defaultCategory = NyaaCategory.AllCategories;
     private rssClient: RssClient = new BasicRssClient();
@@ -194,7 +195,7 @@ export class NyaaClient {
             qs.set('u', params.user)
         }
 
-        const rssUrl = new URL(this.baseUrl.href);
+        const rssUrl = new URL(this.baseUrl);
         rssUrl.search = qs.toString();
 
         const url = new URL(rssUrl.href);
