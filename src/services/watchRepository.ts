@@ -10,7 +10,7 @@ export interface GetWatchesParameters {
 
 export interface WatchRepository {
     addOrUpdateWatch(watch: Watch): Promise<Watch>
-    getWatches(params: GetWatchesParameters): Promise<PagedResult<Watch>>
+    getWatches(params?: GetWatchesParameters): Promise<PagedResult<Watch>>
     deleteWatch(userId: string, id: string): Promise<Watch | null>
 }
 
@@ -31,7 +31,7 @@ export class DatabaseWatchRepository implements WatchRepository {
     }
 
     public async addOrUpdateWatch(watch: Watch) {
-        const { id, createdOnUtc, updatedOnUtc, lastInfoHash, ...filterProperties } = watch
+        const { id, createdOnUtc, updatedOnUtc, infoHashes, ...filterProperties } = watch
         const now = new Date();
         await this.collection.updateOne(filterProperties, {
             $setOnInsert: {
@@ -40,8 +40,12 @@ export class DatabaseWatchRepository implements WatchRepository {
                 id
             },
             $set: {
-                updatedOnUtc: now,
-                lastInfoHash
+                updatedOnUtc: now
+            },
+            $addToSet: {
+                infoHashes: {
+                    $each: infoHashes
+                }
             }
         }, {
             upsert: true
@@ -49,17 +53,17 @@ export class DatabaseWatchRepository implements WatchRepository {
         return watch;
     }
 
-    private getWatchesInternal(params: GetWatchesParameters) {
-        const { userId } = params
+    private getWatchesInternal(params?: GetWatchesParameters) {
+        const userId = params?.userId
         if (userId) {
             return this.collection.find({ userId })
         }
         return this.collection.find()
     }
 
-    public async getWatches(params: GetWatchesParameters): Promise<PagedResult<Watch>> {
-        const pageNumber = params.pageNumber ?? 0
-        const pageSize = params.pageSize ?? 10
+    public async getWatches(params?: GetWatchesParameters): Promise<PagedResult<Watch>> {
+        const pageNumber = params?.pageNumber ?? 0
+        const pageSize = params?.pageSize ?? 10
 
         const offset = pageNumber * pageSize
         const watches = await this.getWatchesInternal(params)

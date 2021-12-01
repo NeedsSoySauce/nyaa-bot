@@ -1,7 +1,7 @@
 import { URL, URLSearchParams } from 'url';
 import { ArrayPager } from '../pager.js';
 import { NullableUndefined, PagedResult } from '../types.js';
-import { BasicRssClient, RssClient } from './rss.js';
+import { BasicRssClient, RssClient } from './rssClient.js';
 
 export enum NyaaFilter {
     NoFilter,
@@ -141,6 +141,11 @@ export interface NyaaSearchResult {
     description: string;
 }
 
+export interface NyaaSearchPagedResult extends PagedResult<NyaaSearchResult> {
+    rssUrl: string;
+    urL: string;
+}
+
 export class NyaaClient {
     private baseUrl = new URL('https://nyaa.si/');
     private defaultFilter = NyaaFilter.NoFilter;
@@ -154,7 +159,7 @@ export class NyaaClient {
         this.rssClient = params.rssClient ?? this.rssClient;
     }
 
-    public mapRssResponse(response: NyaaRssResponse): NyaaSearchResult[] {
+    private mapRssResponse(response: NyaaRssResponse): NyaaSearchResult[] {
         return response.rss.channel.item?.map(item => ({
             title: item.title,
             link: item.link,
@@ -174,7 +179,7 @@ export class NyaaClient {
         })) ?? []
     }
 
-    public async search(params: NyaaSearchParameters): Promise<PagedResult<NyaaSearchResult>> {
+    public async search(params: NyaaSearchParameters): Promise<NyaaSearchPagedResult> {
         const pageNumber = params.pageNumber ?? 0;
         const pageSize = params.pageSize ?? 10;
 
@@ -189,14 +194,22 @@ export class NyaaClient {
             qs.set('u', params.user)
         }
 
-        const url = new URL(this.baseUrl.href);
-        url.search = qs.toString();
+        const rssUrl = new URL(this.baseUrl.href);
+        rssUrl.search = qs.toString();
 
-        const response = await this.rssClient.get<NyaaRssResponse>(`${url}`);
+        const url = new URL(rssUrl.href);
+        url.searchParams.delete('page')
+
+        const response = await this.rssClient.get<NyaaRssResponse>(`${rssUrl}`);
         const results = this.mapRssResponse(response)
 
         const pager = new ArrayPager(results, pageSize)
         const page = pager.getPage(pageNumber)
-        return page;
+
+        return {
+            ...page,
+            rssUrl: rssUrl.toString(),
+            urL: url.toString()
+        };
     }
 }

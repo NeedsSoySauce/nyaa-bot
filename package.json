@@ -59,6 +59,6 @@
     ],
     "ext": ".ts,.js",
     "ignore": [],
-    "exec": "npm run lint && node --loader ts-node/esm -r dotenv/config ./src/index.ts dotenv_config_path=.env"
+    "exec": "node --loader ts-node/esm -r dotenv/config ./src/index.ts dotenv_config_path=.env"
   }
 }

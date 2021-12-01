@@ -5,7 +5,7 @@ import { SearchCommand } from '../models/searchCommand.js';
 import { User } from '../models/user.js';
 import { Watch } from '../models/watch.js';
 import { CommandRepository } from '../services/commandRepository.js';
-import { NyaaCategory, NyaaCategoryDisplayNames, NyaaClient, NyaaFilter, NyaaFilterDisplayNames, NyaaSearchParameters, NyaaSearchResult, ReverseNyaaCategoryDisplayNames, ReverseNyaaFilterDisplayNames } from "../services/nyaa.js";
+import { NyaaCategory, NyaaCategoryDisplayNames, NyaaClient, NyaaFilter, NyaaFilterDisplayNames, NyaaSearchPagedResult, NyaaSearchParameters, NyaaSearchResult, ReverseNyaaCategoryDisplayNames, ReverseNyaaFilterDisplayNames } from "../services/nyaaClient.js";
 import { UserRepository } from "../services/userRepository.js";
 import { WatchRepository } from '../services/watchRepository.js';
 import { PagedResult } from '../types.js';
@@ -21,6 +21,13 @@ export interface SearchParameters extends NyaaSearchParameters {
     pageSize: number;
 }
 
+export interface SearchSlashCommandConstructorParameters {
+    nyaaClient: NyaaClient;
+    userRepository: UserRepository;
+    commandRepository: CommandRepository;
+    watchRepository: WatchRepository;
+}
+
 export class SearchSlashCommand extends BaseCommand {
     public commandTypes: CommandTypes = {
         isButtonCommand: true,
@@ -33,7 +40,7 @@ export class SearchSlashCommand extends BaseCommand {
     private commandRepository: CommandRepository;
     private watchRepository: WatchRepository;
 
-    public constructor(nyaaClient: NyaaClient, userRepository: UserRepository, commandRepository: CommandRepository, watchRepository: WatchRepository) {
+    public constructor({ nyaaClient, userRepository, commandRepository, watchRepository }: SearchSlashCommandConstructorParameters) {
         super()
         this.nyaaClient = nyaaClient;
         this.userRepository = userRepository;
@@ -106,7 +113,9 @@ export class SearchSlashCommand extends BaseCommand {
 
         const searchParameters = this.parseSearchParameters(embed)
 
-        if (interaction.customId !== 'search-watch') {
+        if (interaction.customId === 'search-watch') {
+            searchParameters.pageNumber = 0
+        } else {
             searchParameters.pageNumber += interaction.customId === 'search-next' ? 1 : -1
         }
 
@@ -117,7 +126,7 @@ export class SearchSlashCommand extends BaseCommand {
         const command = new SearchCommand({ ...searchParameters, userId })
 
         if (interaction.customId === 'search-watch') {
-            const watch = await this.watch(interaction.user.id, command);
+            const watch = await this.watch(interaction.user.id, command, page.items);
             const watchEmbed = this.createWatchEmbed(watch)
             await interaction.followUp({ embeds: [watchEmbed], ephemeral: true })
             // await interaction.user.send({ embeds: [watchEmbed] })
@@ -136,8 +145,9 @@ export class SearchSlashCommand extends BaseCommand {
         await interaction.editReply(message);
     }
 
-    private async watch(userId: string, searchCommand: SearchCommand) {
-        return this.watchRepository.addOrUpdateWatch(new Watch(userId, { ...searchCommand, lastInfoHash: null }))
+    private async watch(userId: string, searchCommand: SearchCommand, searchResults: NyaaSearchResult[]) {
+        const infoHashes = searchResults.map(r => r.nyaaInfoHash)
+        return this.watchRepository.addOrUpdateWatch(new Watch(userId, { ...searchCommand, infoHashes }))
     }
 
     private parseSearchParameters(embed: Pick<MessageEmbed | APIEmbed, 'fields' | 'footer'>): SearchParameters {
@@ -184,7 +194,7 @@ export class SearchSlashCommand extends BaseCommand {
         return `${bold(prefix)}${hyperlink(text, item.guid)}`
     }
 
-    private createMessage(page: PagedResult<NyaaSearchResult>, searchParameters: SearchParameters): string | MessagePayload | WebhookEditMessageOptions {
+    private createMessage(page: NyaaSearchPagedResult, searchParameters: SearchParameters): string | MessagePayload | WebhookEditMessageOptions {
         const { items } = page
         const { query, filter, category, user } = searchParameters
 
@@ -233,7 +243,11 @@ export class SearchSlashCommand extends BaseCommand {
                 new MessageButton()
                     .setCustomId('search-watch')
                     .setLabel('Watch')
-                    .setStyle('SECONDARY')
+                    .setStyle('SECONDARY'),
+                new MessageButton()
+                    .setLabel('Nyaa')
+                    .setStyle('LINK')
+                    .setURL(page.urL)
             );
 
         return ({
@@ -244,7 +258,7 @@ export class SearchSlashCommand extends BaseCommand {
 
     private createWatchEmbed(watch: Watch) {
         const { filter, category, query, user } = watch
-        const embed = new MessageEmbed().setTimestamp()
+        const embed = new MessageEmbed()
 
         const filterDisplayName = filter != null ? NyaaFilterDisplayNames.get(filter) ?? `Error (${filter})` : null
         const categoryDisplayName = category != null ? NyaaCategoryDisplayNames.get(category) ?? `Error (${category})` : null

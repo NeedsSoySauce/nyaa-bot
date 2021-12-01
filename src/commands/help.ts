@@ -1,5 +1,5 @@
 import { inlineCode, SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction, InteractionReplyOptions, MessagePayload, WebhookEditMessageOptions, MessageEmbed } from 'discord.js';
+import { CommandInteraction, InteractionReplyOptions, MessageEmbed, MessagePayload } from 'discord.js';
 import { notNull } from '../util.js';
 import { BaseCommand } from './base.js';
 import { Command, CommandTypes } from './index.js';

@@ -1,21 +1,22 @@
 import { ObjectId } from 'mongodb';
 import { SearchParameters } from '../commands/search.js';
-import { NyaaCategory, NyaaFilter } from '../services/nyaa.js';
+import { NyaaSearchParameters } from '../services/nyaaClient';
+import { NyaaCategory, NyaaFilter } from '../services/nyaaClient.js';
 import { Model } from './model.js';
 
 export interface WatchConstructorParams extends Omit<SearchParameters, 'pageNumber' | 'pageSize'> {
     userId: string;
-    lastInfoHash: string | null;
+    infoHashes: string[] | null;
     id?: string;
 }
 
-export class Watch extends Model {
+export class Watch extends Model implements NyaaSearchParameters {
     public userId: string;
     public query: string;
     public filter?: NyaaFilter | null;
     public category?: NyaaCategory | null;
     public user?: string | null;
-    public lastInfoHash: string | null;
+    public infoHashes: string[];
     public id: string;
 
     public constructor(userId: string, params: WatchConstructorParams) {
@@ -25,7 +26,7 @@ export class Watch extends Model {
         this.filter = params.filter;
         this.category = params.category;
         this.user = params.user;
-        this.lastInfoHash = params.lastInfoHash;
+        this.infoHashes = params.infoHashes ?? [];
         this.id = params.id ?? new ObjectId().toHexString()
     }
 }

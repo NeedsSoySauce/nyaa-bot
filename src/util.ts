@@ -18,3 +18,11 @@ export const range = (start: number, stop: number, step = 1) => {
 }
 
 export const error = (message: string) => { throw Error(message) }
+
+export const promisify = <T>(callback: () => T): () => Promise<T> => () => new Promise((resolve, reject) => {
+    try {
+        resolve(callback())
+    } catch (err) {
+        reject(err)
+    }
+})

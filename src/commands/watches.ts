@@ -1,7 +1,7 @@
 import { bold, inlineCode, SlashCommandBuilder } from '@discordjs/builders';
 import { ButtonInteraction, CommandInteraction, MessageActionRow, MessageButton, MessageEmbed, MessagePayload, WebhookEditMessageOptions } from 'discord.js';
 import { Watch } from '../models/watch.js';
-import { NyaaCategoryDisplayNames, NyaaFilterDisplayNames } from '../services/nyaa.js';
+import { NyaaCategoryDisplayNames, NyaaFilterDisplayNames } from '../services/nyaaClient.js';
 import { WatchRepository } from '../services/watchRepository.js';
 import { PagedResult } from '../types.js';
 import { error, notNull } from '../util.js';
@@ -90,7 +90,7 @@ export class WatchesCommand extends BaseCommand {
         embed.setFooter(`Showing ${pageStart} to ${pageEnd} of ${page.total} results`)
 
         const resultText = items.map((value, i) => this.formatItem(value, `${i + pageStart}. `)).join('\n')
-        const description = `Active watches are listed below with IDs in [square brackets]. Use ${inlineCode('/unwatch')} to remove a watch.\n\n${resultText}`
+        const description = `Active watches are listed below with IDs in [square brackets].\n\nUse ${inlineCode('/unwatch')} to remove a watch.\n\n${resultText}`
         embed.setDescription(description)
 
         const next = new MessageActionRow()

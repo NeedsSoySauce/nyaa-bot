@@ -1,11 +1,18 @@
-import { ButtonInteraction, Client, ClientOptions, Collection, CommandInteraction, Interaction, Message } from 'discord.js'
-import { Command } from './commands/index.js'
+import { bold, hyperlink } from '@discordjs/builders';
+import { ButtonInteraction, Client, ClientOptions, Collection, CommandInteraction, Interaction, Message, MessageEmbed } from 'discord.js';
+import { Command } from '../commands/index.js';
+import { Watch } from '../models/watch.js';
+import { NyaaSearchResult } from './nyaaClient.js';
+
+export interface NyaaNotificationService {
+    notifyWatchChanged(userId: string, changes: [Watch, NyaaSearchResult[]][]): Promise<void>
+}
 
 export interface CommandClientConstructorParameters extends ClientOptions {
     commands?: Command[];
 }
 
-export class CommandClient extends Client {
+export class CommandClient extends Client implements NyaaNotificationService {
     public buttonCommands: Command[] = []
     public slashCommands: Collection<string, Command> = new Collection()
 
@@ -67,5 +74,22 @@ export class CommandClient extends Client {
 
     private async handleReady() {
         console.log(`Logged in as ${this.user?.tag}!`);
+    }
+
+    public async notifyWatchChanged(userId: string, changes: [Watch, NyaaSearchResult[]][]): Promise<void> {
+        const user = await this.users.fetch(userId)
+
+        const embed = new MessageEmbed()
+
+        const results = changes.flatMap(c => c[1])
+
+        const description = results
+            .map(result => ` ${bold('•')} ${hyperlink(result.title, result.guid)}`)
+            .join('\n')
+        embed.setDescription(description)
+
+        user.send({
+            embeds: [embed]
+        })
     }
 }

@@ -3,6 +3,7 @@ import { User } from '../models/user.js';
 
 export interface UserRepository {
     addOrUpdateUser(user: User): Promise<User>
+    getUserIds(): Promise<string[]>
 }
 
 export class DatabaseUserRepository implements UserRepository {
@@ -29,5 +30,9 @@ export class DatabaseUserRepository implements UserRepository {
             upsert: true
         });
         return user;
+    }
+
+    public getUserIds() {
+        return this.collection.distinct("id")
     }
 }

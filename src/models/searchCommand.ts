@@ -1,5 +1,5 @@
 import { SearchParameters } from '../commands/search.js';
-import { NyaaCategory, NyaaFilter } from '../services/nyaa.js';
+import { NyaaCategory, NyaaFilter } from '../services/nyaaClient.js';
 import { NullableUndefined } from "../types";
 import { Command, CommandConstructorParams } from './command.js';
 

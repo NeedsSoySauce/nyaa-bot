@@ -1,6 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
 import fs from 'fs';
-import { RssClient } from '../src/services/rss.js';
+import { RssClient } from '../src/services/rssClient.js';
 
 export class MockRssClient implements RssClient {
     private mappings: Record<string, string>;
