@@ -26,7 +26,7 @@ export class NyaaWatcher {
         this.nyaaNotificationService = nyaaNotificationService;
         this.watchRepository = watchRepository;
         this.userRepository = userRepository;
-        this.milliseconds = milliseconds ?? 60 * 60 * 1000
+        this.milliseconds = milliseconds ?? 60 * 60 * 1000 * 0.5 // 30 minutes
         this.runner = new Runner(this.checkWatches.bind(this), this.milliseconds)
     }
 
