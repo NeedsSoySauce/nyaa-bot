@@ -86,7 +86,7 @@ export interface NyaaRssChannel {
     description: string;
     link: string;
     "atom:link": string;
-    item?: NyaaRssItem[];
+    item?: NyaaRssItem[] | NyaaRssItem;
 }
 
 export interface NyaaRssItem {
@@ -161,7 +161,13 @@ export class NyaaClient {
     }
 
     private mapRssResponse(response: NyaaRssResponse): NyaaSearchResult[] {
-        return response.rss.channel.item?.map(item => ({
+        let items = response.rss.channel.item ?? [];
+
+        if (!Array.isArray(items)) {
+            items = [items]
+        }
+
+        return items.map(item => ({
             title: item.title,
             link: item.link,
             guid: item.guid,
