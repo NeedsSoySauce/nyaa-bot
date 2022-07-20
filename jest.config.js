@@ -1,4 +1,4 @@
-// eslint-disable-next-line no-restricted-syntax
+/* eslint-disable no-restricted-syntax */
 export default {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'jest-environment-node',

@@ -1,6 +1,5 @@
-import { bold, hyperlink, inlineCode, SlashCommandBuilder } from '@discordjs/builders';
-import { APIEmbed } from 'discord-api-types';
-import { ButtonInteraction, CacheType, CommandInteraction, EmbedFieldData, MessageActionRow, MessageButton, MessageEmbed, MessagePayload, WebhookEditMessageOptions } from 'discord.js';
+import { APIApplicationCommandOptionChoice, APIEmbedField, ButtonStyle } from 'discord-api-types/v10';
+import { ActionRowBuilder, bold, ButtonBuilder, ButtonInteraction, ChatInputCommandInteraction, Embed, EmbedBuilder, hyperlink, inlineCode, MessageActionRowComponentBuilder, MessagePayload, SlashCommandBuilder, WebhookEditMessageOptions } from 'discord.js';
 import { SearchCommand } from '../models/searchCommand.js';
 import { User } from '../models/user.js';
 import { Watch } from '../models/watch.js';
@@ -10,10 +9,16 @@ import { UserRepository } from "../services/userRepository.js";
 import { WatchRepository } from '../services/watchRepository.js';
 import { ellipsis, error, escapeDiscordMarkdown } from '../util.js';
 import { BaseCommand } from './base.js';
-import { CommandOptionChoice, CommandTypes } from './index.js';
+import { CommandTypes } from './index.js';
 
-const filterChoices: CommandOptionChoice<number>[] = Array.from(NyaaFilterDisplayNames, ([filter, name]) => [name, filter])
-const categoryChoices: CommandOptionChoice<string>[] = Array.from(NyaaCategoryDisplayNames, ([filter, name]) => [name, filter])
+const filterChoices: APIApplicationCommandOptionChoice<number>[] = Array.from(NyaaFilterDisplayNames, ([filter, name]) => ({
+    name,
+    value: filter
+}))
+const categoryChoices: APIApplicationCommandOptionChoice<string>[] = Array.from(NyaaCategoryDisplayNames, ([filter, name]) => ({
+    name,
+    value: filter
+}))
 
 export interface SearchParameters extends NyaaSearchParameters {
     pageNumber: number;
@@ -58,17 +63,17 @@ export class SearchSlashCommand extends BaseCommand {
             .addIntegerOption(option =>
                 option.setName('filter')
                     .setDescription("Filter option, e.g. 'No Remakes'")
-                    .addChoices(filterChoices))
+                    .setChoices(...filterChoices))
             .addStringOption(option =>
                 option.setName('category')
                     .setDescription("Category filter, e.g. 'Anime - English Translated'")
-                    .addChoices(categoryChoices))
+                    .setChoices(...categoryChoices))
             .addStringOption(option =>
                 option.setName('user')
                     .setDescription("User filter, e.g. 'subsplease'"))
     }
 
-    public async executeSlashCommand(interaction: CommandInteraction<CacheType>) {
+    public async executeSlashCommand(interaction: ChatInputCommandInteraction) {
         await interaction.deferReply({ ephemeral: true })
 
         const searchParameters = this.getSearchParameters(interaction)
@@ -89,7 +94,7 @@ export class SearchSlashCommand extends BaseCommand {
         await interaction.editReply(message)
     }
 
-    private getSearchParameters(interaction: CommandInteraction<CacheType>): SearchParameters {
+    private getSearchParameters(interaction: ChatInputCommandInteraction): SearchParameters {
         const query = interaction.options.getString('query', true)
         const filter = interaction.options.getInteger('filter') as NyaaFilter | null
         const category = interaction.options.getString('category') as NyaaCategory | null
@@ -101,7 +106,7 @@ export class SearchSlashCommand extends BaseCommand {
         return id === 'search-previous' || id === 'search-next' || id ==='search-watch'
     }
 
-    public async executeButtonCommand(interaction: ButtonInteraction<CacheType>): Promise<void> {
+    public async executeButtonCommand(interaction: ButtonInteraction): Promise<void> {
         await interaction.deferUpdate()
 
         const embed = interaction.message.embeds[0]
@@ -149,7 +154,7 @@ export class SearchSlashCommand extends BaseCommand {
         return this.watchRepository.addOrUpdateWatch(new Watch(userId, { ...searchCommand, infoHashes }))
     }
 
-    private parseSearchParameters(embed: Pick<MessageEmbed | APIEmbed, 'fields' | 'footer'>): SearchParameters {
+    private parseSearchParameters(embed: Embed): SearchParameters {
         const query = embed.fields?.find(f => f.name === 'Query')?.value ?? error("'Query' field not found")
         const user = embed.fields?.find(f => f.name === 'User')?.value
         const filterDisplayName = embed.fields?.find(f => f.name === 'Filter')?.value
@@ -189,17 +194,17 @@ export class SearchSlashCommand extends BaseCommand {
         const { items } = page
         const { query, filter, category, user } = searchParameters
 
-        const embed = new MessageEmbed().setTimestamp()
+        const embed = new EmbedBuilder().setTimestamp()
 
         const offset = page.pageNumber * page.pageSize
         const pageStart = Math.min(offset + 1, page.total)
         const pageEnd = Math.min(offset + page.pageSize, page.total)
-        embed.setFooter(`Showing ${pageStart} to ${pageEnd} of ${page.total} results`)
+        embed.setFooter({ text: `Showing ${pageStart} to ${pageEnd} of ${page.total} results` })
 
         const filterDisplayName = filter != null ? NyaaFilterDisplayNames.get(filter) ?? `Error (${filter})` : null
         const categoryDisplayName = category != null ? NyaaCategoryDisplayNames.get(category) ?? `Error (${category})` : null
 
-        const embedFieldData: EmbedFieldData[] = [{ name: 'Query', value: query, inline: true }]
+        const embedFieldData: APIEmbedField[] = [{ name: 'Query', value: query, inline: true }]
 
         if (filterDisplayName) {
             embedFieldData.push({ name: 'Filter', value: filterDisplayName, inline: true })
@@ -218,43 +223,42 @@ export class SearchSlashCommand extends BaseCommand {
         const description = items.map((value, i) => this.formatItem(value, `${i + pageStart}. `)).join('\n')
         embed.setDescription(description)
 
-        // #TODO disable watch button and or notify user if already watching
-        const next = new MessageActionRow()
-            .addComponents(
-                new MessageButton()
+        const actionRowBuilder = new ActionRowBuilder<MessageActionRowComponentBuilder>()
+            .setComponents(
+                new ButtonBuilder()
                     .setCustomId('search-previous')
                     .setLabel('Previous page')
-                    .setStyle('PRIMARY')
+                    .setStyle(ButtonStyle.Primary)
                     .setDisabled(!page.hasPrevious),
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId('search-next')
                     .setLabel('Next page')
-                    .setStyle('PRIMARY')
+                    .setStyle(ButtonStyle.Primary)
                     .setDisabled(!page.hasNext),
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId('search-watch')
                     .setLabel('Watch')
-                    .setStyle('SECONDARY'),
-                new MessageButton()
+                    .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
                     .setLabel('Nyaa')
-                    .setStyle('LINK')
+                    .setStyle(ButtonStyle.Link)
                     .setURL(page.urL)
             );
 
         return ({
             embeds: [embed],
-            components: [next]
+            components: [actionRowBuilder]
         })
     }
 
     private createWatchEmbed(watch: Watch) {
         const { filter, category, query, user } = watch
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
 
         const filterDisplayName = filter != null ? NyaaFilterDisplayNames.get(filter) ?? `Error (${filter})` : null
         const categoryDisplayName = category != null ? NyaaCategoryDisplayNames.get(category) ?? `Error (${category})` : null
 
-        const embedFieldData: EmbedFieldData[] = [{ name: 'Query', value: query, inline: true }]
+        const embedFieldData: APIEmbedField[] = [{ name: 'Query', value: query, inline: true }]
 
         if (filterDisplayName) {
             embedFieldData.push({ name: 'Filter', value: filterDisplayName, inline: true })

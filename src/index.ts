@@ -1,6 +1,6 @@
 import { REST } from '@discordjs/rest';
-import { Routes } from 'discord-api-types/v9';
-import { Intents } from 'discord.js';
+import { Routes } from 'discord-api-types/v10';
+import { IntentsBitField, Partials } from 'discord.js';
 import { MongoClient } from 'mongodb';
 import { EOL } from 'node:os';
 import { CommandClient } from './services/commandClient.js';
@@ -69,19 +69,17 @@ const main = async () => {
 
   const startApplication = async (commands: Command[]) => {
     const commandClient = new CommandClient({
-        intents: [
-            Intents.FLAGS.GUILDS,
-            Intents.FLAGS.DIRECT_MESSAGES,
-            Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
-            Intents.FLAGS.GUILD_MESSAGES,
-            Intents.FLAGS.GUILD_MESSAGE_REACTIONS
-        ],
-        partials: ["CHANNEL"],
+        intents: new IntentsBitField("Guilds")
+          .add("DirectMessages")
+          .add('DirectMessageReactions')
+          .add('GuildMessages')
+          .add('GuildMessageTyping'),
+        partials: [Partials.Channel],
         commands
     });
     const watcher = new NyaaWatcher({ nyaaClient, nyaaNotificationService: commandClient, watchRepository, userRepository })
 
-    await commandClient.login(process.env.DISCORD_TOKEN);
+    await commandClient.login(getEnvironmentVariable('DISCORD_TOKEN'));
     watcher.start()
   }
 

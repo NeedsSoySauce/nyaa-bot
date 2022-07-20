@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction } from 'discord.js';
+import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
 import { BaseCommand } from './base.js';
 import { CommandTypes } from './index.js';
 
@@ -19,7 +18,7 @@ export class DebugSlashCommand extends BaseCommand {
         return new SlashCommandBuilder().setName("debug").setDescription("Print debug information");
     }
 
-    public async executeSlashCommand(interaction: CommandInteraction) {
+    public async executeSlashCommand(interaction: ChatInputCommandInteraction) {
         await interaction.reply({ content: JSON.stringify(interaction, replacer, 2, ), ephemeral: true })
     }
 }

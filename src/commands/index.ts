@@ -1,10 +1,7 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
-import { ButtonInteraction, CommandInteraction } from 'discord.js';
+import { ButtonInteraction, ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
 import { NullableUndefined } from "../types.js";
 import { DebugSlashCommand } from './debug.js';
 import { SearchSlashCommand } from './search.js';
-
-export type CommandOptionChoice<T> = [name: string, value: T]
 
 export interface CommandTypes extends NullableUndefined<{
     isSlashCommand?: boolean
@@ -14,9 +11,10 @@ export interface CommandTypes extends NullableUndefined<{
 export interface Command {
     readonly commandTypes: CommandTypes
     createSlashCommandBuilder(): Pick<SlashCommandBuilder, "toJSON" | "name" | "description"> | null,
-    executeSlashCommand(interaction: CommandInteraction): Promise<void>
+    executeSlashCommand(interaction: ChatInputCommandInteraction): Promise<void>
     isButtonCommandExecutor(customId: string): boolean;
     executeButtonCommand(interaction: ButtonInteraction): Promise<void>
 }
 
 export { SearchSlashCommand, DebugSlashCommand };
+

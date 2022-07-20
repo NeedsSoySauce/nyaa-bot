@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { SlashCommandBuilder } from '@discordjs/builders';
-import { ButtonInteraction, CacheType, CommandInteraction } from 'discord.js';
+import { ButtonInteraction, ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
 import { Command, CommandTypes } from './index.js';
 
 export abstract class BaseCommand implements Command {
@@ -10,7 +9,7 @@ export abstract class BaseCommand implements Command {
         return null
     }
 
-    public executeSlashCommand(interaction: CommandInteraction<CacheType>): Promise<void> {
+    public executeSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
         return Promise.resolve()
     }
 
@@ -18,7 +17,7 @@ export abstract class BaseCommand implements Command {
         return false
     }
 
-    public executeButtonCommand(interaction: ButtonInteraction<CacheType>): Promise<void> {
+    public executeButtonCommand(interaction: ButtonInteraction): Promise<void> {
         return Promise.resolve()
     }
 }

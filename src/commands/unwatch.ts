@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction, MessageEmbed, MessagePayload, WebhookEditMessageOptions } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, MessagePayload, SlashCommandBuilder, WebhookEditMessageOptions } from 'discord.js';
 import { Watch } from '../models/watch.js';
 import { WatchRepository } from '../services/watchRepository.js';
 import { BaseCommand } from './base.js';
@@ -27,7 +26,7 @@ export class UnwatchCommand extends BaseCommand {
                     .setRequired(true))
     }
 
-    public async executeSlashCommand(interaction: CommandInteraction) {
+    public async executeSlashCommand(interaction: ChatInputCommandInteraction) {
         await interaction.deferReply({ ephemeral: true })
 
         const watchId = interaction.options.getString('id', true)
@@ -39,7 +38,7 @@ export class UnwatchCommand extends BaseCommand {
     }
 
     private createMessage(watchId: string, watch: Watch | null): string | MessagePayload | WebhookEditMessageOptions {
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
 
         const description = watch ? `Deleted watch ${watch.id}.` : `No watch with ID '${watchId}' was found.`
         embed.setDescription(description)

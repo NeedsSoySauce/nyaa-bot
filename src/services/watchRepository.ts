@@ -61,6 +61,14 @@ export class DatabaseWatchRepository implements WatchRepository {
         return this.collection.find()
     }
 
+    private getTotalWatches(params?: GetWatchesParameters) {
+        const userId = params?.userId
+        if (userId) {
+            return this.collection.countDocuments({ userId })
+        }
+        return this.collection.countDocuments()
+    }
+
     public async getWatches(params?: GetWatchesParameters): Promise<PagedResult<Watch>> {
         const pageNumber = params?.pageNumber ?? 0
         const pageSize = params?.pageSize ?? 10
@@ -72,7 +80,7 @@ export class DatabaseWatchRepository implements WatchRepository {
             .limit(pageSize)
             .map(doc => new Watch(doc.userId, doc))
             .toArray()
-        const total = await this.getWatchesInternal(params).count()
+        const total = await this.getTotalWatches()
         const pageCount = Math.ceil(total / pageSize)
 
         return {

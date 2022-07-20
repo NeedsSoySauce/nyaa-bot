@@ -1,5 +1,4 @@
-import { inlineCode, SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction, InteractionReplyOptions, MessageEmbed, MessagePayload } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, inlineCode, InteractionReplyOptions, MessagePayload, SlashCommandBuilder } from 'discord.js';
 import { notNull } from '../util.js';
 import { BaseCommand } from './base.js';
 import { Command, CommandTypes } from './index.js';
@@ -20,7 +19,7 @@ export class HelpSlashCommand extends BaseCommand {
         return new SlashCommandBuilder().setName("help").setDescription("List available commands");
     }
 
-    public async executeSlashCommand(interaction: CommandInteraction) {
+    public async executeSlashCommand(interaction: ChatInputCommandInteraction) {
         await interaction.reply(this.helpMessage)
     }
 
@@ -31,7 +30,7 @@ export class HelpSlashCommand extends BaseCommand {
     }
 
     private createMessage(commands: Command[]): MessagePayload | InteractionReplyOptions {
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
         const description = commands
             .map(c => c.createSlashCommandBuilder())
             .filter(notNull)

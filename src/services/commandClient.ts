@@ -1,5 +1,4 @@
-import { hyperlink } from '@discordjs/builders';
-import { ButtonInteraction, Client, ClientOptions, Collection, CommandInteraction, Interaction, Message, MessageEmbed } from 'discord.js';
+import { ButtonInteraction, ChatInputCommandInteraction, Client, ClientOptions, Collection, EmbedBuilder, hyperlink, Interaction, Message } from 'discord.js';
 import { Command } from '../commands/index.js';
 import { Watch } from '../models/watch.js';
 import { ellipsis, escapeDiscordMarkdown } from '../util.js';
@@ -48,7 +47,7 @@ export class CommandClient extends Client implements NyaaNotificationService {
         }
     }
 
-    private async handleCommandInteraction(interaction: CommandInteraction): Promise<void> {
+    private async handleChatInputCommandInteraction(interaction: ChatInputCommandInteraction): Promise<void> {
         const command = this.slashCommands.get(interaction.commandName)
         try {
             await command?.executeSlashCommand(interaction)
@@ -61,8 +60,8 @@ export class CommandClient extends Client implements NyaaNotificationService {
     private async handleInteraction(interaction: Interaction) {
         if (interaction.isButton()) {
             await this.handleButtonInteraction(interaction)
-        } else if (interaction.isCommand()) {
-            await this.handleCommandInteraction(interaction)
+        } else if (interaction.isChatInputCommand()) {
+            await this.handleChatInputCommandInteraction(interaction)
         }
     }
 
@@ -80,7 +79,7 @@ export class CommandClient extends Client implements NyaaNotificationService {
     public async notifyWatchChanged(userId: string, changes: [Watch, NyaaSearchResult[]][]): Promise<void> {
         if (changes.length === 0) return
         const user = await this.users.fetch(userId)
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
         const results = changes.flatMap(c => c[1])
         const resultsList = results
             .map(result => {

@@ -1,5 +1,4 @@
-import { bold, inlineCode, SlashCommandBuilder } from '@discordjs/builders';
-import { ButtonInteraction, CommandInteraction, MessageActionRow, MessageButton, MessageEmbed, MessagePayload, WebhookEditMessageOptions } from 'discord.js';
+import { ActionRowBuilder, bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, EmbedBuilder, inlineCode, MessageActionRowComponentBuilder, MessagePayload, SlashCommandBuilder, WebhookEditMessageOptions } from 'discord.js';
 import { Watch } from '../models/watch.js';
 import { NyaaCategoryDisplayNames, NyaaFilterDisplayNames } from '../services/nyaaClient.js';
 import { WatchRepository } from '../services/watchRepository.js';
@@ -29,7 +28,7 @@ export class WatchesCommand extends BaseCommand {
         return customId === 'watches-previous' || customId === 'watches-next'
     }
 
-    public async executeSlashCommand(interaction: CommandInteraction) {
+    public async executeSlashCommand(interaction: ChatInputCommandInteraction) {
         await interaction.deferReply({ ephemeral: true })
 
         const page = await this.watchRepository.getWatches({ userId: interaction.user.id })
@@ -82,28 +81,28 @@ export class WatchesCommand extends BaseCommand {
     private createMessage(page: PagedResult<Watch>): string | MessagePayload | WebhookEditMessageOptions {
         const { items } = page
 
-        const embed = new MessageEmbed().setTimestamp()
+        const embed = new EmbedBuilder().setTimestamp()
 
         const offset = page.pageNumber * page.pageSize
         const pageStart = Math.min(offset + 1, page.total)
         const pageEnd = Math.min(offset + page.pageSize, page.total)
-        embed.setFooter(`Showing ${pageStart} to ${pageEnd} of ${page.total} results`)
+        embed.setFooter({ text: `Showing ${pageStart} to ${pageEnd} of ${page.total} results` })
 
         const resultText = items.map((value, i) => this.formatItem(value, `${i + pageStart}. `)).join('\n')
         const description = `Active watches are listed below with IDs in [square brackets].\n\nUse ${inlineCode('/unwatch')} to remove a watch.\n\n${resultText}`
         embed.setDescription(description)
 
-        const next = new MessageActionRow()
+        const next = new ActionRowBuilder<MessageActionRowComponentBuilder>()
             .addComponents(
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId('watches-previous')
                     .setLabel('Previous page')
-                    .setStyle('PRIMARY')
+                    .setStyle(ButtonStyle.Primary)
                     .setDisabled(!page.hasPrevious),
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId('watches-next')
                     .setLabel('Next page')
-                    .setStyle('PRIMARY')
+                    .setStyle(ButtonStyle.Primary)
                     .setDisabled(!page.hasNext),
             );
 
