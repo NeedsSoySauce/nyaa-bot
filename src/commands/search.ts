@@ -43,6 +43,7 @@ export class SearchSlashCommand extends BaseCommand {
     private userRepository: UserRepository;
     private commandRepository: CommandRepository;
     private watchRepository: WatchRepository;
+    private pageSize = 10;
 
     public constructor({ nyaaClient, userRepository, commandRepository, watchRepository }: SearchSlashCommandConstructorParameters) {
         super()
@@ -99,7 +100,7 @@ export class SearchSlashCommand extends BaseCommand {
         const filter = interaction.options.getInteger('filter') as NyaaFilter | null
         const category = interaction.options.getString('category') as NyaaCategory | null
         const user = interaction.options.getString('user')
-        return { query, filter, category, user, pageNumber: 0, pageSize: 10 }
+        return { query, filter, category, user, pageNumber: 0, pageSize: this.pageSize }
     }
 
     public isButtonCommandExecutor(id: string): boolean {
@@ -110,11 +111,6 @@ export class SearchSlashCommand extends BaseCommand {
         await interaction.deferUpdate()
 
         const embed = interaction.message.embeds[0]
-
-        if (!embed.fields || !embed.footer) {
-            throw Error("Invalid embed type")
-        }
-
         const searchParameters = this.parseSearchParameters(embed)
 
         if (interaction.customId === 'search-watch') {
@@ -162,7 +158,7 @@ export class SearchSlashCommand extends BaseCommand {
         const categoryDisplayName = embed.fields?.find(f => f.name === 'Category')?.value
         const category = categoryDisplayName ? ReverseNyaaCategoryDisplayNames.get(categoryDisplayName) : null
 
-        const pagingText = embed.footer?.text ?? error("Paging text not found")
+        const pagingText = embed.footer?.text;
         const pagingParamters = this.parsePagingParameters(pagingText)
 
         return {
@@ -174,14 +170,20 @@ export class SearchSlashCommand extends BaseCommand {
         }
     }
 
-    private parsePagingParameters(text: string): Pick<SearchParameters, 'pageNumber' | 'pageSize'> {
+    private parsePagingParameters(text?: string): Pick<SearchParameters, 'pageNumber' | 'pageSize'> {
+        if (!text) {
+            return {
+                pageNumber: 0,
+                pageSize: this.pageSize
+            }
+        }
         const parts = text.split(' ')
         const pageStart = Number(parts[1])
         const offset = pageStart - 1
-        const pageNumber = offset / 10
+        const pageNumber = offset / this.pageSize
         return {
             pageNumber,
-            pageSize: 10
+            pageSize: this.pageSize
         }
     }
 
@@ -195,12 +197,6 @@ export class SearchSlashCommand extends BaseCommand {
         const { query, filter, category, user } = searchParameters
 
         const embed = new EmbedBuilder().setTimestamp()
-
-        const offset = page.pageNumber * page.pageSize
-        const pageStart = Math.min(offset + 1, page.total)
-        const pageEnd = Math.min(offset + page.pageSize, page.total)
-        embed.setFooter({ text: `Showing ${pageStart} to ${pageEnd} of ${page.total} results` })
-
         const filterDisplayName = filter != null ? NyaaFilterDisplayNames.get(filter) ?? `Error (${filter})` : null
         const categoryDisplayName = category != null ? NyaaCategoryDisplayNames.get(category) ?? `Error (${category})` : null
 
@@ -220,21 +216,19 @@ export class SearchSlashCommand extends BaseCommand {
 
         embed.addFields(embedFieldData)
 
-        const description = items.map((value, i) => this.formatItem(value, `${i + pageStart}. `)).join('\n')
-        embed.setDescription(description)
+        if (items.length) {
+            const offset = page.pageNumber * page.pageSize
+            const pageStart = Math.min(offset + 1, page.total)
+            const pageEnd = Math.min(offset + page.pageSize, page.total)
+            embed.setFooter({ text: `Showing ${pageStart} to ${pageEnd} of ${page.total} results` })
+            const description = items.map((value, i) => this.formatItem(value, `${i + pageStart}. `)).join('\n')
+            embed.setDescription(description)
+        } else {
+            embed.setDescription("No results found")
+        }
 
         const actionRowBuilder = new ActionRowBuilder<MessageActionRowComponentBuilder>()
             .setComponents(
-                new ButtonBuilder()
-                    .setCustomId('search-previous')
-                    .setLabel('Previous page')
-                    .setStyle(ButtonStyle.Primary)
-                    .setDisabled(!page.hasPrevious),
-                new ButtonBuilder()
-                    .setCustomId('search-next')
-                    .setLabel('Next page')
-                    .setStyle(ButtonStyle.Primary)
-                    .setDisabled(!page.hasNext),
                 new ButtonBuilder()
                     .setCustomId('search-watch')
                     .setLabel('Watch')
@@ -244,6 +238,21 @@ export class SearchSlashCommand extends BaseCommand {
                     .setStyle(ButtonStyle.Link)
                     .setURL(page.urL)
             );
+
+        if (items.length) {
+            actionRowBuilder.addComponents(
+                new ButtonBuilder()
+                    .setCustomId('search-previous')
+                    .setLabel('Previous page')
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(!page.hasPrevious),
+                new ButtonBuilder()
+                    .setCustomId('search-next')
+                    .setLabel('Next page')
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(!page.hasNext)
+            );
+        }
 
         return ({
             embeds: [embed],
