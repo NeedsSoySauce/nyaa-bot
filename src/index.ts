@@ -21,6 +21,8 @@ const mongoClient = new MongoClient(databaseUrl);
 const db = mongoClient.db();
 
 const main = async () => {
+  await mongoClient.connect();
+
   const nyaaClient = new NyaaClient()
   const userRepository: UserRepository = new DatabaseUserRepository(db)
   const commandRepository: CommandRepository = new DatabaseCommandRepository(db)
@@ -90,10 +92,4 @@ const main = async () => {
   }
 }
 
-mongoClient.connect(async err => {
-  if (err) {
-    console.error(err)
-  } else {
-    await main()
-  }
-});
+await main();

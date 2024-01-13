@@ -96,6 +96,6 @@ export class DatabaseWatchRepository implements WatchRepository {
 
     public async deleteWatch(userId: string, id: string): Promise<Watch | null> {
         const result = await this.collection.findOneAndDelete({ userId, id })
-        return result.value
+        return result;
     }
 }

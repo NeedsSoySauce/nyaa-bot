@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, EmbedBuilder, MessagePayload, SlashCommandBuilder, WebhookEditMessageOptions } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, InteractionEditReplyOptions, MessagePayload, SlashCommandBuilder } from 'discord.js';
 import { Watch } from '../models/watch.js';
 import { WatchRepository } from '../services/watchRepository.js';
 import { BaseCommand } from './base.js';
@@ -37,7 +37,7 @@ export class UnwatchCommand extends BaseCommand {
         await interaction.editReply(message)
     }
 
-    private createMessage(watchId: string, watch: Watch | null): string | MessagePayload | WebhookEditMessageOptions {
+    private createMessage(watchId: string, watch: Watch | null): string | MessagePayload | InteractionEditReplyOptions {
         const embed = new EmbedBuilder()
 
         const description = watch ? `Deleted watch ${watch.id}.` : `No watch with ID '${watchId}' was found.`

@@ -1,4 +1,4 @@
-import { ActionRowBuilder, bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, EmbedBuilder, inlineCode, MessageActionRowComponentBuilder, MessagePayload, SlashCommandBuilder, WebhookEditMessageOptions } from 'discord.js';
+import { ActionRowBuilder, bold, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, EmbedBuilder, inlineCode, InteractionEditReplyOptions, MessageActionRowComponentBuilder, MessagePayload, SlashCommandBuilder } from 'discord.js';
 import { Watch } from '../models/watch.js';
 import { NyaaCategoryDisplayNames, NyaaFilterDisplayNames } from '../services/nyaaClient.js';
 import { WatchRepository } from '../services/watchRepository.js';
@@ -78,7 +78,7 @@ export class WatchesCommand extends BaseCommand {
         return `${bold(prefix)}${properties.join(', ')} [${item.id}]`
     }
 
-    private createMessage(page: PagedResult<Watch>): string | MessagePayload | WebhookEditMessageOptions {
+    private createMessage(page: PagedResult<Watch>): string | MessagePayload | InteractionEditReplyOptions {
         const { items } = page
 
         const embed = new EmbedBuilder().setTimestamp()

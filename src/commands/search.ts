@@ -1,5 +1,5 @@
 import { APIApplicationCommandOptionChoice, APIEmbedField, ButtonStyle } from 'discord-api-types/v10';
-import { ActionRowBuilder, bold, ButtonBuilder, ButtonInteraction, ChatInputCommandInteraction, Embed, EmbedBuilder, hyperlink, inlineCode, MessageActionRowComponentBuilder, MessagePayload, SlashCommandBuilder, WebhookEditMessageOptions } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ChatInputCommandInteraction, Embed, EmbedBuilder, InteractionEditReplyOptions, MessageActionRowComponentBuilder, MessagePayload, SlashCommandBuilder, bold, hyperlink, inlineCode } from 'discord.js';
 import { SearchCommand } from '../models/searchCommand.js';
 import { User } from '../models/user.js';
 import { Watch } from '../models/watch.js';
@@ -192,7 +192,7 @@ export class SearchSlashCommand extends BaseCommand {
         return `${bold(prefix)}${hyperlink(text, item.guid)}`
     }
 
-    private createMessage(page: NyaaSearchPagedResult, searchParameters: SearchParameters): string | MessagePayload | WebhookEditMessageOptions {
+    private createMessage(page: NyaaSearchPagedResult, searchParameters: SearchParameters): string | MessagePayload | InteractionEditReplyOptions {
         const { items } = page
         const { query, filter, category, user } = searchParameters
 
@@ -254,10 +254,10 @@ export class SearchSlashCommand extends BaseCommand {
             );
         }
 
-        return ({
+        return {
             embeds: [embed],
             components: [actionRowBuilder]
-        })
+        }
     }
 
     private createWatchEmbed(watch: Watch) {
